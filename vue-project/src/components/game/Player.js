@@ -3,32 +3,30 @@ import { distance, roundPoint } from './utils.js'
 import LinkedList from './LinkedList.js'
 
 export default class Player extends pixi.Graphics {
-  constructor(moveSpeed, initX, initY, initAreaRadius = 50) {
-    super().circle(0, 0, 10, 10).fill(0xffffff)
+  constructor(moveSpeed, initX, initY, initAreaRadius = 50, color = 0xffff00) {
+    super()
+      .circle(0, 0, 10, 10)
+      .fill(color)
+      .stroke({ width: 3, color: (color & 0xeeeeee) >> 1 })
+
+    this.color = color
     this.moveSpeed = moveSpeed
     this.acceleration = { x: 0, y: 0 }
+
     this.setPos(initX, initY)
 
     const currPos = this.getRoundedPos()
     this.lastPos = currPos
 
-    this.trailPoints = []
-
     this.area = new pixi.Graphics()
-      .circle(currPos.x, currPos.y, initAreaRadius, initAreaRadius)
-      .fill(0xffff00)
-    this.trail = new pixi.Graphics().moveTo(currPos.x, currPos.y)
-
-    this.prevInArea = true
-
     this.areaOuterPoints = new LinkedList()
+    this.prevInArea = true
+    this.initArea(initAreaRadius)
 
+    this.trailPoints = []
     this.trailBeginPoint = null
     this.trailEndPoint = null
-
-    this.initArea(initAreaRadius)
-    console.log(this.areaOuterPoints.head.data)
-    console.log(this.areaOuterPoints.tail.next.data)
+    this.trail = new pixi.Graphics().moveTo(currPos.x, currPos.y)
   }
 
   setPos(x, y) {
@@ -56,23 +54,19 @@ export default class Player extends pixi.Graphics {
     const currPos = this.getRoundedPos()
 
     if (distance(this.lastPos, currPos) > 10) {
-      // if entering area
       if (this.area.containsPoint(currPos) && !this.prevInArea) {
+        // if entering area
         this.trail.clear()
 
         this.trailEndPoint = this.areaOuterPoints.findClosest(currPos)
-        console.log('new end point')
-        console.log(this.trailEndPoint.data)
 
         if (this.compareBounds()) {
-          console.log('A')
           this.areaOuterPoints.appendArray(
             this.trailBeginPoint,
             this.trailEndPoint,
             this.trailPoints
           )
         } else {
-          console.log('B')
           this.areaOuterPoints.appendArray(
             this.trailEndPoint,
             this.trailBeginPoint,
@@ -87,18 +81,15 @@ export default class Player extends pixi.Graphics {
           this.trailBeginPoint = this.areaOuterPoints.findClosest(currPos)
         }
       } else if (!this.area.containsPoint(currPos)) {
-        // if exiting area
         if (this.prevInArea) {
-          this.trail.moveTo(currPos.x, currPos.y)
+          // if exiting area
+          this.trail.moveTo(this.lastPos.x, this.lastPos.y)
           this.trailPoints.push(this.lastPos)
-          // console.log(this.areaOuterPoints.toArray())
           this.trailBeginPoint = this.areaOuterPoints.findClosest(currPos)
-          console.log('new begin point')
-          console.log(this.trailBeginPoint.data)
         }
 
         this.trailPoints.push(currPos)
-        this.trail.lineTo(currPos.x, currPos.y).stroke({ width: 10, color: 0x00ffff })
+        this.trail.lineTo(currPos.x, currPos.y).stroke({ width: 10, color: 0xffff00, alpha: 0.5 })
       }
       this.prevInArea = this.area.containsPoint(currPos)
       this.lastPos = currPos
@@ -106,7 +97,6 @@ export default class Player extends pixi.Graphics {
   }
 
   fillArea() {
-    console.log(this.areaOuterPoints.toArray())
     this.area.clear().roundShape(this.areaOuterPoints.toArray(), 5).fill(0xffff00)
   }
 
