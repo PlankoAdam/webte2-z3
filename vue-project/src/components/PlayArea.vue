@@ -14,7 +14,12 @@ let pointerCoords = { x: 0, y: 0 }
 const app = new pixi.Application()
 
 onMounted(async () => {
-  await app.init({ width: gameWidth, height: gameHeight, backgroundColor: 0xffffff })
+  await app.init({
+    width: gameWidth,
+    height: gameHeight,
+    backgroundColor: 0xffffff,
+    antialias: true
+  })
   pixiCanvas.value.appendChild(app.canvas)
   app.stage.hitArea = app.screen
   app.stage.eventMode = 'static'

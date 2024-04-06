@@ -89,7 +89,9 @@ export default class Player extends pixi.Graphics {
         }
 
         this.trailPoints.push(currPos)
-        this.trail.lineTo(currPos.x, currPos.y).stroke({ width: 10, color: this.color, alpha: 0.5 })
+        this.trail
+          .lineTo(currPos.x, currPos.y)
+          .stroke({ width: 10, color: this.color, cap: 'round' })
       }
       this.prevInArea = this.area.containsPoint(currPos)
       this.lastPos = currPos
