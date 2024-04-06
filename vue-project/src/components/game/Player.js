@@ -13,7 +13,6 @@ export default class Player extends pixi.Graphics {
     this.lastPos = currPos
 
     this.trailPoints = []
-    // this.trailPoints.append(currPos)
 
     this.area = new pixi.Graphics()
       .circle(currPos.x, currPos.y, initAreaRadius, initAreaRadius)
@@ -23,20 +22,13 @@ export default class Player extends pixi.Graphics {
     this.prevInArea = true
 
     this.areaOuterPoints = new LinkedList()
-    // this.areaOuterPoints.append({ x: currPos.x - initAreaRadius, y: currPos.y - initAreaRadius })
-    // this.areaOuterPoints.append({ x: currPos.x - initAreaRadius, y: currPos.y + initAreaRadius })
-    // this.areaOuterPoints.append({ x: currPos.x + initAreaRadius, y: currPos.y + initAreaRadius })
-    // this.areaOuterPoints.append({ x: currPos.x + initAreaRadius, y: currPos.y - initAreaRadius })
-    // this.fillArea()
-
-    // console.log(this.areaOuterPoints.toArray())
 
     this.trailBeginPoint = null
     this.trailEndPoint = null
 
-    // this.relativeAngle = 0
-
     this.initArea(initAreaRadius)
+    console.log(this.areaOuterPoints.head.data)
+    console.log(this.areaOuterPoints.tail.next.data)
   }
 
   setPos(x, y) {
@@ -57,12 +49,10 @@ export default class Player extends pixi.Graphics {
     this.x += this.acceleration.x * timeDelta
     this.y += this.acceleration.y * timeDelta
 
-    // console.log(this.position.x)
     this.updateTrail()
   }
 
   updateTrail() {
-    // let lastTrailPoint = this.trailPoints.tail.data
     const currPos = this.getRoundedPos()
 
     if (distance(this.lastPos, currPos) > 10) {
@@ -73,11 +63,6 @@ export default class Player extends pixi.Graphics {
         this.trailEndPoint = this.areaOuterPoints.findClosest(currPos)
         console.log('new end point')
         console.log(this.trailEndPoint.data)
-
-        // console.log('trail')
-        // console.log(this.trailPoints)
-
-        // if (this.trailBeginPoint.idx < this.trailEndPoint.idx) {
 
         if (this.compareBounds()) {
           console.log('A')
@@ -122,16 +107,7 @@ export default class Player extends pixi.Graphics {
 
   fillArea() {
     console.log(this.areaOuterPoints.toArray())
-    this.area
-      .clear()
-      .roundShape(this.areaOuterPoints.toArray(), 5)
-      // .roundShape(this.trailPoints, 5)
-      .fill(0xffff00)
-      .stroke({ width: 5, color: 0xff0000 })
-    // .rect(this.area.bounds.x, this.area.bounds.y, this.area.bounds.width, this.area.bounds.height)
-    // .stroke({ width: 3, color: 0x00ff00 })
-
-    // this.cullTrailPoints()
+    this.area.clear().roundShape(this.areaOuterPoints.toArray(), 5).fill(0xffff00)
   }
 
   getRoundedPos() {
@@ -162,11 +138,6 @@ export default class Player extends pixi.Graphics {
     )
     g.clear().roundShape(copiedList.toArray(), 5).fill(0)
     const boundsB = g.bounds
-
-    console.log('bounds A')
-    console.log(boundsA)
-    console.log('bounds B')
-    console.log(boundsB)
 
     const widthA = boundsA.maxX - boundsA.minX
     const heightA = boundsA.maxY - boundsA.minY
