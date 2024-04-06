@@ -41,12 +41,15 @@ onMounted(async () => {
   app.ticker.start()
 })
 
-const player = app.stage.addChild(new Player(4, gameWidth / 2, gameHeight / 2))
+const player = new Player(4, 300, 300)
+// app.stage.addChild(player.area)
+app.stage.addChild(player.area)
+app.stage.addChild(player.trail)
+app.stage.addChild(player)
 </script>
 
 <template>
   <div>
-    <h1>sifaosiaoisdfopashdf</h1>
     <div ref="pixiCanvas"></div>
   </div>
 </template>

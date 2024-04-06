@@ -10,3 +10,7 @@ export function normalize2DVect(v) {
   if (len === 0) return v
   return { x: v.x / len, y: v.y / len }
 }
+
+export function roundPoint(p) {
+  return { x: Math.round(p.x), y: Math.round(p.y) }
+}

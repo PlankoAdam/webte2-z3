@@ -1,12 +1,42 @@
 import * as pixi from 'pixi.js'
-// import { distance, normalize2DVect } from './utils.js'
+import { distance, roundPoint } from './utils.js'
+import LinkedList from './LinkedList.js'
 
 export default class Player extends pixi.Graphics {
-  constructor(moveSpeed, initX, initY) {
+  constructor(moveSpeed, initX, initY, initAreaRadius = 50) {
     super().circle(0, 0, 10, 10).fill(0xffffff)
     this.moveSpeed = moveSpeed
     this.acceleration = { x: 0, y: 0 }
     this.setPos(initX, initY)
+
+    const currPos = this.getRoundedPos()
+    this.lastPos = currPos
+
+    this.trailPoints = []
+    // this.trailPoints.append(currPos)
+
+    this.area = new pixi.Graphics()
+      .circle(currPos.x, currPos.y, initAreaRadius, initAreaRadius)
+      .fill(0xffff00)
+    this.trail = new pixi.Graphics().moveTo(currPos.x, currPos.y)
+
+    this.prevInArea = true
+
+    this.areaOuterPoints = new LinkedList()
+    // this.areaOuterPoints.append({ x: currPos.x - initAreaRadius, y: currPos.y - initAreaRadius })
+    // this.areaOuterPoints.append({ x: currPos.x - initAreaRadius, y: currPos.y + initAreaRadius })
+    // this.areaOuterPoints.append({ x: currPos.x + initAreaRadius, y: currPos.y + initAreaRadius })
+    // this.areaOuterPoints.append({ x: currPos.x + initAreaRadius, y: currPos.y - initAreaRadius })
+    // this.fillArea()
+
+    // console.log(this.areaOuterPoints.toArray())
+
+    this.trailBeginPoint = null
+    this.trailEndPoint = null
+
+    // this.relativeAngle = 0
+
+    this.initArea(initAreaRadius)
   }
 
   setPos(x, y) {
@@ -14,36 +44,153 @@ export default class Player extends pixi.Graphics {
   }
 
   followPointer(pointerCoords, timeDelta) {
-    // const screenWidth = this.parent.hitArea.width
-    // const screenHeight = this.parent.hitArea.height
-    // if (
-    //   screenWidth > pointerCoords.x ||
-    //   pointerCoords.x > 0 ||
-    //   screenHeight > pointerCoords.y ||
-    //   pointerCoords.y > 0
-    // ) {
     const toMouseDirection = {
       x: pointerCoords.x - this.x,
       y: pointerCoords.y - this.y
     }
 
     const angleToMouse = Math.atan2(toMouseDirection.x, toMouseDirection.y)
-    // const dist = distance(pointerCoords, this.position)
-    // const playerSpeed = this.moveSpeed
-
-    // const rotationAngle = Math.atan2(toMouseDirection.y, toMouseDirection.x) + Math.PI / 2
-    // this.rotation = rotationAngle
-
     this.acceleration = {
       x: Math.sin(angleToMouse) * this.moveSpeed,
       y: Math.cos(angleToMouse) * this.moveSpeed
     }
-
-    // this.acceleration = normalize2DVect(this.acceleration)
-    // }
-
-    // console.log(this.position.x)
     this.x += this.acceleration.x * timeDelta
     this.y += this.acceleration.y * timeDelta
+
+    // console.log(this.position.x)
+    this.updateTrail()
+  }
+
+  updateTrail() {
+    // let lastTrailPoint = this.trailPoints.tail.data
+    const currPos = this.getRoundedPos()
+
+    if (distance(this.lastPos, currPos) > 10) {
+      // if entering area
+      if (this.area.containsPoint(currPos) && !this.prevInArea) {
+        this.trail.clear()
+
+        this.trailEndPoint = this.areaOuterPoints.findClosest(currPos)
+        console.log('new end point')
+        console.log(this.trailEndPoint.data)
+
+        // console.log('trail')
+        // console.log(this.trailPoints)
+
+        // if (this.trailBeginPoint.idx < this.trailEndPoint.idx) {
+
+        if (this.compareBounds()) {
+          console.log('A')
+          this.areaOuterPoints.appendArray(
+            this.trailBeginPoint,
+            this.trailEndPoint,
+            this.trailPoints
+          )
+        } else {
+          console.log('B')
+          this.areaOuterPoints.appendArray(
+            this.trailEndPoint,
+            this.trailBeginPoint,
+            this.trailPoints.slice().reverse()
+          )
+        }
+
+        this.fillArea()
+        this.trailPoints = []
+
+        if (!this.area.containsPoint(currPos)) {
+          this.trailBeginPoint = this.areaOuterPoints.findClosest(currPos)
+        }
+      } else if (!this.area.containsPoint(currPos)) {
+        // if exiting area
+        if (this.prevInArea) {
+          this.trail.moveTo(currPos.x, currPos.y)
+          this.trailPoints.push(this.lastPos)
+          // console.log(this.areaOuterPoints.toArray())
+          this.trailBeginPoint = this.areaOuterPoints.findClosest(currPos)
+          console.log('new begin point')
+          console.log(this.trailBeginPoint.data)
+        }
+
+        this.trailPoints.push(currPos)
+        this.trail.lineTo(currPos.x, currPos.y).stroke({ width: 10, color: 0x00ffff })
+      }
+      this.prevInArea = this.area.containsPoint(currPos)
+      this.lastPos = currPos
+    }
+  }
+
+  fillArea() {
+    console.log(this.areaOuterPoints.toArray())
+    this.area
+      .clear()
+      .roundShape(this.areaOuterPoints.toArray(), 5)
+      // .roundShape(this.trailPoints, 5)
+      .fill(0xffff00)
+      .stroke({ width: 5, color: 0xff0000 })
+    // .rect(this.area.bounds.x, this.area.bounds.y, this.area.bounds.width, this.area.bounds.height)
+    // .stroke({ width: 3, color: 0x00ff00 })
+
+    // this.cullTrailPoints()
+  }
+
+  getRoundedPos() {
+    return roundPoint({ x: this.position.x, y: this.position.y })
+  }
+
+  compareBounds() {
+    // scenario A
+    let g = new pixi.Graphics()
+    let copiedList = this.areaOuterPoints.deepCopy()
+    let copiedTrailBeginPoint = copiedList.findClosest(this.trailBeginPoint.data)
+    let copiedTrailEndPoint = copiedList.findClosest(this.trailEndPoint.data)
+
+    copiedList.appendArray(copiedTrailBeginPoint, copiedTrailEndPoint, this.trailPoints)
+    g.clear().roundShape(copiedList.toArray(), 5).fill(0)
+    const boundsA = g.bounds
+
+    // scenario B
+    g = new pixi.Graphics()
+    copiedList = this.areaOuterPoints.deepCopy()
+    copiedTrailBeginPoint = copiedList.findClosest(this.trailBeginPoint.data)
+    copiedTrailEndPoint = copiedList.findClosest(this.trailEndPoint.data)
+
+    copiedList.appendArray(
+      copiedTrailEndPoint,
+      copiedTrailBeginPoint,
+      this.trailPoints.slice().reverse()
+    )
+    g.clear().roundShape(copiedList.toArray(), 5).fill(0)
+    const boundsB = g.bounds
+
+    console.log('bounds A')
+    console.log(boundsA)
+    console.log('bounds B')
+    console.log(boundsB)
+
+    const widthA = boundsA.maxX - boundsA.minX
+    const heightA = boundsA.maxY - boundsA.minY
+    const widthB = boundsB.maxX - boundsB.minX
+    const heightB = boundsB.maxY - boundsB.minY
+
+    if (widthA >= widthB && heightA >= heightB) {
+      return true
+    }
+    return false
+  }
+
+  initArea(radius) {
+    const n = 20
+
+    for (let i = 0; i < n; i++) {
+      let newPoint = {
+        x: this.getRoundedPos().x + radius * Math.sin((i * 2 * Math.PI) / n),
+        y: this.getRoundedPos().y + radius * Math.cos((i * 2 * Math.PI) / n)
+      }
+      newPoint = roundPoint(newPoint)
+      this.areaOuterPoints.append(newPoint)
+    }
+
+    this.fillArea()
   }
 }
