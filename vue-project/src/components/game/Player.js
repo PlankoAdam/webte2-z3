@@ -29,6 +29,10 @@ export default class Player extends pixi.Graphics {
     this.trail = new pixi.Graphics().moveTo(currPos.x, currPos.y)
   }
 
+  setUpdateFunc(updateFunc) {
+    this.updateCallback = updateFunc
+  }
+
   setPos(x, y) {
     this.position.set(x, y)
   }
@@ -95,6 +99,8 @@ export default class Player extends pixi.Graphics {
       }
       this.prevInArea = this.area.containsPoint(currPos)
       this.lastPos = currPos
+
+      if (this.updateCallback) this.updateCallback(this)
     }
   }
 
