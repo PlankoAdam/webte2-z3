@@ -4,6 +4,7 @@ import { onMounted, ref } from 'vue'
 import Player from './game/Player'
 import { io } from 'socket.io-client'
 import Opponent from './game/Opponent'
+// import { Layer } from '@pixi/layers'
 
 const pixiCanvas = ref(null)
 
@@ -15,6 +16,10 @@ let pointerCoords = { x: 0, y: 0 }
 
 const app = new pixi.Application()
 
+// let areaLayer = new Layer()
+// let trailLayer = new Layer()
+// let playerLayer = new Layer()
+
 onMounted(async () => {
   await app.init({
     width: gameWidth,
@@ -22,6 +27,11 @@ onMounted(async () => {
     backgroundColor: 0xffffff,
     antialias: true
   })
+
+  // app.stage.addChild(areaLayer)
+  // app.stage.addChild(trailLayer)
+  // app.stage.addChild(playerLayer)
+
   pixiCanvas.value.appendChild(app.canvas)
   app.stage.hitArea = app.screen
   app.stage.eventMode = 'static'
@@ -54,9 +64,12 @@ const player = new Player(
   30,
   Math.random() * 16777215
 )
+
 app.stage.addChild(player.area)
 app.stage.addChild(player.trail)
+player.trail.zIndex = 10
 app.stage.addChild(player)
+player.zIndex = 20
 
 let otherPlayers = []
 let playerId = null
@@ -65,6 +78,7 @@ const socket = io('ws://localhost:8080')
 
 socket.on('connected', (id) => {
   playerId = id
+  player.socket = socket
   console.log(playerId)
   socket.emit('player_joined', {
     id: playerId,
@@ -91,9 +105,11 @@ socket.on('connected', (id) => {
 
       let newPlayer = new Opponent(pl.id, pl.coords, pl.color)
       otherPlayers.push(newPlayer)
-      app.stage.addChild(newPlayer.trail)
       app.stage.addChild(newPlayer.area)
+      app.stage.addChild(newPlayer.trail)
+      newPlayer.trail.zIndex = 10
       app.stage.addChild(newPlayer)
+      newPlayer.zIndex = 20
 
       newPlayer.update(pl)
     })
@@ -102,12 +118,27 @@ socket.on('connected', (id) => {
 
     console.log('plyrs on client')
     console.log(otherPlayers)
+
+    player.otherPlayers = otherPlayers
   })
 
   socket.on('update', (playerData) => {
     let updatedPlayer = otherPlayers.find((pl) => pl.id == playerData.id)
     if (updatedPlayer) {
       updatedPlayer.update(playerData)
+    }
+  })
+
+  socket.on('overtake', (playerData) => {
+    if (playerData.id == playerId) {
+      console.log('afasdasdasdasdfasdf')
+      player.updateArea(playerData.area)
+    } else {
+      let opl = otherPlayers.find((pl) => pl.id == playerData.id)
+      if (opl) {
+        console.log('calling update on other player')
+        opl.update(playerData)
+      }
     }
   })
 

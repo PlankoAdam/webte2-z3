@@ -26,6 +26,19 @@ io.on("connection", (socket) => {
     socket.broadcast.emit("update", updatedPlayer);
   });
 
+  socket.on("overtake", (overtakenPlayer) => {
+    let updatedOvertakenPlayer = players.find(
+      (pl) => pl.id == overtakenPlayer.id
+    );
+    if (updatedOvertakenPlayer) {
+      updatedOvertakenPlayer.coords = overtakenPlayer.coords;
+      updatedOvertakenPlayer.trail = overtakenPlayer.trail;
+      updatedOvertakenPlayer.area = overtakenPlayer.area;
+    }
+
+    io.emit("overtake", updatedOvertakenPlayer);
+  });
+
   socket.on("disconnect", () => {
     const disconnectedPlayerId = players.find(
       (pl) => pl.socketId == socket.id

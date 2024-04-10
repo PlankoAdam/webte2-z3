@@ -27,6 +27,10 @@ export default class Player extends pixi.Graphics {
     this.trailBeginPoint = null
     this.trailEndPoint = null
     this.trail = new pixi.Graphics().moveTo(currPos.x, currPos.y)
+
+    this.otherPlayers = []
+
+    this.socket = null
   }
 
   setUpdateFunc(updateFunc) {
@@ -79,6 +83,23 @@ export default class Player extends pixi.Graphics {
         }
 
         this.fillArea()
+
+        this.otherPlayers.forEach((e) => {
+          if (e.carveArea(this.trailPoints, this.area)) {
+            if (this.socket) {
+              let data = {
+                id: e.id,
+                coords: e.getRoundedPos(),
+                color: e.color,
+                trail: e.trailPoints,
+                area: e.areaPoints
+              }
+              console.log(data)
+              this.socket.emit('overtake', data)
+            }
+          }
+        })
+
         this.trailPoints = []
 
         if (!this.area.containsPoint(currPos)) {
@@ -100,12 +121,22 @@ export default class Player extends pixi.Graphics {
       this.prevInArea = this.area.containsPoint(currPos)
       this.lastPos = currPos
 
+      console.log('this player trail:')
+      console.log(this.trailPoints)
       if (this.updateCallback) this.updateCallback(this)
     }
   }
 
   fillArea() {
     this.area.clear().roundShape(this.areaOuterPoints.toArray(), 5).fill(this.color)
+  }
+
+  updateArea(areaPoints) {
+    this.areaOuterPoints = new LinkedList()
+    areaPoints.forEach((e) => {
+      this.areaOuterPoints.append(e)
+    })
+    this.fillArea()
   }
 
   getRoundedPos() {
