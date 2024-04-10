@@ -4,9 +4,11 @@ import { onMounted, ref } from 'vue'
 import Player from './game/Player'
 import { io } from 'socket.io-client'
 import Opponent from './game/Opponent'
+import GameOverModal from './GameOverModal.vue'
 // import { Layer } from '@pixi/layers'
 
 const pixiCanvas = ref(null)
+let lost = ref(false)
 
 const gameWidth = 600
 const gameHeight = 600
@@ -50,14 +52,14 @@ onMounted(async () => {
   })
 
   app.ticker.add((delta) => {
-    if (pointerInside) {
+    if (pointerInside && player) {
       player.followPointer(pointerCoords, delta.deltaTime)
     }
   })
   app.ticker.start()
 })
 
-const player = new Player(
+let player = new Player(
   4,
   Math.random() * gameWidth,
   Math.random() * gameHeight,
@@ -113,13 +115,18 @@ socket.on('connected', (id) => {
       newPlayer.update(pl)
     })
 
-    player.otherPlayers = otherPlayers
+    if (player) {
+      player.otherPlayers = otherPlayers
+    }
   })
 
   socket.on('update', (playerData) => {
     let updatedPlayer = otherPlayers.find((pl) => pl.id == playerData.id)
     if (updatedPlayer) {
       updatedPlayer.update(playerData)
+      if (player && player.trail.containsPoint(updatedPlayer.getRoundedPos())) {
+        gameOver(socket, playerId)
+      }
     }
   })
 
@@ -143,10 +150,20 @@ socket.on('connected', (id) => {
     otherPlayers = otherPlayers.filter((pl) => pl.id != id)
   })
 })
+
+function gameOver(socket, id) {
+  socket.emit('lose', id)
+  app.stage.removeChild(player)
+  app.stage.removeChild(player.trail)
+  app.stage.removeChild(player.area)
+  player = null
+  lost.value = true
+}
 </script>
 
 <template>
   <div>
+    <GameOverModal v-if="lost"></GameOverModal>
     <div ref="pixiCanvas"></div>
   </div>
 </template>

@@ -39,6 +39,11 @@ io.on("connection", (socket) => {
     io.emit("overtake", updatedOvertakenPlayer);
   });
 
+  socket.on("lose", (playerId) => {
+    players = players.filter((pl) => pl.is != playerId);
+    socket.broadcast.emit("disconnected", playerId);
+  });
+
   socket.on("disconnect", () => {
     const disconnectedPlayerId = players.find(
       (pl) => pl.socketId == socket.id
