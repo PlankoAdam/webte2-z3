@@ -79,7 +79,6 @@ const socket = io('ws://localhost:8080')
 socket.on('connected', (id) => {
   playerId = id
   player.socket = socket
-  console.log(playerId)
   socket.emit('player_joined', {
     id: playerId,
     coords: player.getRoundedPos(),
@@ -113,11 +112,6 @@ socket.on('connected', (id) => {
 
       newPlayer.update(pl)
     })
-    console.log('plyrs on srvr')
-    console.log(players)
-
-    console.log('plyrs on client')
-    console.log(otherPlayers)
 
     player.otherPlayers = otherPlayers
   })
@@ -131,21 +125,16 @@ socket.on('connected', (id) => {
 
   socket.on('overtake', (playerData) => {
     if (playerData.id == playerId) {
-      console.log('afasdasdasdasdfasdf')
       player.updateArea(playerData.area)
     } else {
       let opl = otherPlayers.find((pl) => pl.id == playerData.id)
       if (opl) {
-        console.log('calling update on other player')
         opl.update(playerData)
       }
     }
   })
 
   socket.on('disconnected', (id) => {
-    console.log('disconn id')
-    console.log(id)
-
     let disconnectedPlayer = otherPlayers.find((pl) => pl.id == id)
     app.stage.removeChild(disconnectedPlayer.trail)
     app.stage.removeChild(disconnectedPlayer.area)

@@ -100,10 +100,6 @@ export default class Opponent extends pixi.Graphics {
     for (let i = 0; i < arr.length; i++) {
       if (!oppArea.containsPoint(arr[i])) notInShape++
     }
-    console.log('notinshape')
-    console.log(notInShape)
-    console.log('inside trail')
-    console.log(insideTrailPoints)
     if (notInShape > insideTrailPoints.length + 2) return true
     else return false
   }

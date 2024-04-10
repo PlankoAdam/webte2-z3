@@ -94,7 +94,6 @@ export default class Player extends pixi.Graphics {
                 trail: e.trailPoints,
                 area: e.areaPoints
               }
-              console.log(data)
               this.socket.emit('overtake', data)
             }
           }
@@ -121,8 +120,6 @@ export default class Player extends pixi.Graphics {
       this.prevInArea = this.area.containsPoint(currPos)
       this.lastPos = currPos
 
-      console.log('this player trail:')
-      console.log(this.trailPoints)
       if (this.updateCallback) this.updateCallback(this)
     }
   }
