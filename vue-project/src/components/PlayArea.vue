@@ -97,6 +97,10 @@ socket.on('connected', (id) => {
       trail: pl.trailPoints,
       area: pl.areaOuterPoints.toArray()
     })
+    const plPos = pl.getRoundedPos()
+    if (player.trail.containsPoint(plPos)) {
+      gameOver(socket, playerId)
+    }
   })
 
   socket.on('player_joined', (players) => {
@@ -133,6 +137,11 @@ socket.on('connected', (id) => {
   socket.on('overtake', (playerData) => {
     if (playerData.id == playerId) {
       player.updateArea(playerData.area)
+      otherPlayers.forEach((opl) => {
+        if (opl.area.containsPoint(player.getRoundedPos())) {
+          gameOver(socket, playerId)
+        }
+      })
     } else {
       let opl = otherPlayers.find((pl) => pl.id == playerData.id)
       if (opl) {

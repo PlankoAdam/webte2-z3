@@ -40,16 +40,16 @@ io.on("connection", (socket) => {
   });
 
   socket.on("lose", (playerId) => {
-    players = players.filter((pl) => pl.is != playerId);
+    players = players.filter((pl) => pl.id != playerId);
     socket.broadcast.emit("disconnected", playerId);
   });
 
   socket.on("disconnect", () => {
-    const disconnectedPlayerId = players.find(
-      (pl) => pl.socketId == socket.id
-    ).id;
+    const disconnectedPlayer = players.find((pl) => pl.socketId == socket.id);
     players = players.filter((pl) => pl.socketId != socket.id);
-    io.emit("disconnected", disconnectedPlayerId);
+    if (disconnectedPlayer) {
+      io.emit("disconnected", disconnectedPlayer.id);
+    }
     console.log(players.length);
   });
 });

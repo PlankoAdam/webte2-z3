@@ -112,9 +112,9 @@ export default class Player extends pixi.Graphics {
           this.trailBeginPoint = this.areaOuterPoints.findClosest(currPos)
         }
 
-        this.trailPoints.push(currPos)
+        this.trailPoints.push(this.lastPos)
         this.trail
-          .lineTo(currPos.x, currPos.y)
+          .lineTo(this.lastPos.x, this.lastPos.y)
           .stroke({ width: 10, color: this.color, cap: 'round' })
       }
       this.prevInArea = this.area.containsPoint(currPos)
