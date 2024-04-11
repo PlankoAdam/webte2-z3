@@ -86,6 +86,7 @@ export default class Player extends pixi.Graphics {
 
         this.otherPlayers.forEach((e) => {
           if (e.carveArea(this.trailPoints, this.area)) {
+            if (this.updateCallback) this.updateCallback(this)
             if (this.socket) {
               let data = {
                 id: e.id,
