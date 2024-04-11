@@ -14,3 +14,17 @@ export function normalize2DVect(v) {
 export function roundPoint(p) {
   return { x: Math.round(p.x), y: Math.round(p.y) }
 }
+
+export function polygonArea(vertices) {
+  // Check if there are at least 3 vertices
+  if (vertices.length < 3) {
+    return 'Error: Polygon must have at least 3 vertices'
+  }
+
+  let area = 0
+  for (let i = 0; i < vertices.length; i++) {
+    const j = (i + 1) % vertices.length // Index of the next vertex, wrapping around
+    area += vertices[i].x * vertices[j].y - vertices[j].x * vertices[i].y
+  }
+  return Math.abs(area) / 2
+}

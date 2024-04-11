@@ -5,22 +5,20 @@ import Player from './game/Player'
 import { io } from 'socket.io-client'
 import Opponent from './game/Opponent'
 import GameOverModal from './GameOverModal.vue'
-// import { Layer } from '@pixi/layers'
+import { polygonArea } from './game/utils'
 
 const pixiCanvas = ref(null)
 let lost = ref(false)
+let areaRatio = ref(0)
 
 const gameWidth = 600
 const gameHeight = 600
+const gameArea = gameWidth * gameHeight
 
 let pointerInside = false
 let pointerCoords = { x: 0, y: 0 }
 
 const app = new pixi.Application()
-
-// let areaLayer = new Layer()
-// let trailLayer = new Layer()
-// let playerLayer = new Layer()
 
 onMounted(async () => {
   await app.init({
@@ -29,10 +27,6 @@ onMounted(async () => {
     backgroundColor: 0xffffff,
     antialias: true
   })
-
-  // app.stage.addChild(areaLayer)
-  // app.stage.addChild(trailLayer)
-  // app.stage.addChild(playerLayer)
 
   pixiCanvas.value.appendChild(app.canvas)
   app.stage.hitArea = app.screen
@@ -54,6 +48,7 @@ onMounted(async () => {
   app.ticker.add((delta) => {
     if (pointerInside && player) {
       player.followPointer(pointerCoords, delta.deltaTime)
+      areaRatio.value = calcPlayerArea(gameArea, player.areaOuterPoints.toArray())
     }
   })
   app.ticker.start()
@@ -160,6 +155,12 @@ socket.on('connected', (id) => {
   })
 })
 
+function calcPlayerArea(gameArea, vertices) {
+  const playerArea = polygonArea(vertices)
+  // console.log('calc')
+  return playerArea / gameArea
+}
+
 function gameOver(socket, id) {
   socket.emit('lose', id)
   app.stage.removeChild(player)
@@ -173,6 +174,7 @@ function gameOver(socket, id) {
 <template>
   <div>
     <GameOverModal v-if="lost"></GameOverModal>
+    <h1 class="text-white text-4xl">{{ (areaRatio * 100).toFixed(2) }}%</h1>
     <div ref="pixiCanvas"></div>
   </div>
 </template>
