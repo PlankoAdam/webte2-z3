@@ -5,10 +5,12 @@ import Player from './game/Player'
 import { io } from 'socket.io-client'
 import Opponent from './game/Opponent'
 import GameOverModal from './GameOverModal.vue'
+import WinModal from './WinModal.vue'
 import { polygonArea } from './game/utils'
 
 const pixiCanvas = ref(null)
 let lost = ref(false)
+let won = ref(false)
 let areaRatio = ref(0)
 
 const gameWidth = 600
@@ -48,6 +50,8 @@ onMounted(async () => {
   app.ticker.add((delta) => {
     if (pointerInside && player) {
       player.followPointer(pointerCoords, delta.deltaTime)
+    }
+    if (pointerInside && player) {
       areaRatio.value = calcPlayerArea(gameArea, player.areaOuterPoints.toArray())
     }
   })
@@ -93,7 +97,7 @@ socket.on('connected', (id) => {
       area: pl.areaOuterPoints.toArray()
     })
     const plPos = pl.getRoundedPos()
-    if (player.trail.containsPoint(plPos)) {
+    if (pl.trail.containsPoint(plPos)) {
       gameOver(socket, playerId)
     }
   })
@@ -145,6 +149,14 @@ socket.on('connected', (id) => {
     }
   })
 
+  socket.on('win', (winner) => {
+    // console.log(winner)
+    if (winner.id == playerId) {
+      won.value = true
+      app.ticker.stop()
+    }
+  })
+
   socket.on('disconnected', (id) => {
     let disconnectedPlayer = otherPlayers.find((pl) => pl.id == id)
     app.stage.removeChild(disconnectedPlayer.trail)
@@ -173,6 +185,7 @@ function gameOver(socket, id) {
 
 <template>
   <div>
+    <WinModal v-if="won"></WinModal>
     <GameOverModal v-if="lost"></GameOverModal>
     <h1 class="text-white text-4xl">{{ (areaRatio * 100).toFixed(2) }}%</h1>
     <div ref="pixiCanvas"></div>

@@ -14,7 +14,7 @@ io.on("connection", (socket) => {
     player.socketId = socket.id;
     players.push(player);
     io.emit("player_joined", players);
-    console.log(players.length);
+    // console.log(players.length);
   });
 
   socket.on("update", (player) => {
@@ -42,6 +42,11 @@ io.on("connection", (socket) => {
   socket.on("lose", (playerId) => {
     players = players.filter((pl) => pl.id != playerId);
     socket.broadcast.emit("disconnected", playerId);
+    if (players.length == 1) {
+      let winner = players[0];
+      console.log("win");
+      io.emit("win", winner);
+    }
   });
 
   socket.on("disconnect", () => {
@@ -50,7 +55,7 @@ io.on("connection", (socket) => {
     if (disconnectedPlayer) {
       io.emit("disconnected", disconnectedPlayer.id);
     }
-    console.log(players.length);
+    // console.log(players.length);
   });
 });
 
