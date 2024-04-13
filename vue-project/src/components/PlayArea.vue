@@ -154,6 +154,7 @@ socket.on('connected', (id) => {
     if (winner.id == playerId) {
       won.value = true
       app.ticker.stop()
+      socket.disconnect()
     }
   })
 

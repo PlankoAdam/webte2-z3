@@ -44,7 +44,6 @@ io.on("connection", (socket) => {
     socket.broadcast.emit("disconnected", playerId);
     if (players.length == 1) {
       let winner = players[0];
-      console.log("win");
       io.emit("win", winner);
     }
   });
@@ -55,7 +54,6 @@ io.on("connection", (socket) => {
     if (disconnectedPlayer) {
       io.emit("disconnected", disconnectedPlayer.id);
     }
-    // console.log(players.length);
   });
 });
 
