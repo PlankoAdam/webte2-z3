@@ -5,7 +5,7 @@ import LinkedList from './LinkedList.js'
 export default class Player extends pixi.Graphics {
   constructor(moveSpeed, initX, initY, initAreaRadius = 50, color = 0xffff00) {
     super()
-      .circle(0, 0, 10, 10)
+      .rect(-10, -10, 20, 20)
       .fill(color)
       .stroke({ width: 3, color: (color & 0xeeeeee) >> 1 })
 
@@ -54,6 +54,9 @@ export default class Player extends pixi.Graphics {
     }
     this.x += this.acceleration.x * timeDelta
     this.y += this.acceleration.y * timeDelta
+
+    const rotationAngle = Math.atan2(toMouseDirection.y, toMouseDirection.x) + Math.PI / 2
+    this.rotation = rotationAngle
 
     this.updateTrail()
   }

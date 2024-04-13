@@ -14,7 +14,7 @@ let won = ref(false)
 let areaRatio = ref(0)
 let timer = ref(0)
 
-const gameWidth = 600
+const gameWidth = 700
 const gameHeight = 600
 const gameArea = gameWidth * gameHeight
 
@@ -185,6 +185,7 @@ function calcPlayerArea(gameArea, vertices) {
 
 function gameOver(socket, id) {
   socket.emit('lose', id)
+  socket.disconnect()
   app.stage.removeChild(player)
   app.stage.removeChild(player.trail)
   app.stage.removeChild(player.area)
@@ -197,8 +198,10 @@ function gameOver(socket, id) {
   <div>
     <WinModal v-if="won"></WinModal>
     <GameOverModal v-if="lost"></GameOverModal>
-    <h1 class="text-white text-4xl">{{ (areaRatio * 100).toFixed(2) }}%</h1>
-    <h1 class="text-white text-4xl">TIMER: {{ timer }}</h1>
+    <div class="flex flex-row justify-between">
+      <h1 class="text-white text-4xl">TIMER: {{ timer }}</h1>
+      <h1 class="text-white text-4xl">{{ (areaRatio * 100).toFixed(2) }}%</h1>
+    </div>
     <div ref="pixiCanvas"></div>
   </div>
 </template>
