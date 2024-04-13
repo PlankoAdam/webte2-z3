@@ -6,6 +6,10 @@ const io = require("socket.io")(http, {
 let players = [];
 let nextId = 0;
 
+const timerStartVal = 20;
+let timeRemainingSec = timerStartVal;
+let intervalID = null;
+
 io.on("connection", (socket) => {
   // console.log("connected!!!");
   socket.emit("connected", nextId++);
@@ -15,6 +19,9 @@ io.on("connection", (socket) => {
     players.push(player);
     io.emit("player_joined", players);
     // console.log(players.length);
+    if (players.length >= 2) {
+      startTimer();
+    }
   });
 
   socket.on("update", (player) => {
@@ -22,6 +29,7 @@ io.on("connection", (socket) => {
     updatedPlayer.coords = player.coords;
     updatedPlayer.trail = player.trail;
     updatedPlayer.area = player.area;
+    updatedPlayer.coverage = player.coverage;
 
     socket.broadcast.emit("update", updatedPlayer);
   });
@@ -45,6 +53,7 @@ io.on("connection", (socket) => {
     if (players.length == 1) {
       let winner = players[0];
       io.emit("win", winner);
+      stopTimer();
     }
   });
 
@@ -54,9 +63,38 @@ io.on("connection", (socket) => {
     if (disconnectedPlayer) {
       io.emit("disconnected", disconnectedPlayer.id);
     }
+    if (players.length < 2) {
+      stopTimer();
+    }
   });
 });
 
 http.listen(8080, () => {
   console.log("listening 8080");
 });
+
+function startTimer() {
+  intervalID = setInterval(() => {
+    io.emit("timer", timeRemainingSec--);
+    if (timeRemainingSec <= 0) {
+      io.emit("win", chooseWinner());
+      // console.log(players);
+      stopTimer();
+    }
+  }, 1000);
+}
+
+function stopTimer() {
+  clearInterval(intervalID);
+  timeRemainingSec = timerStartVal;
+}
+
+function chooseWinner() {
+  let winner = players[0];
+  players.forEach((pl) => {
+    if (pl.coverage > winner.coverage) {
+      winner = pl;
+    }
+  });
+  return winner;
+}

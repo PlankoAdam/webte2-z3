@@ -12,6 +12,7 @@ const pixiCanvas = ref(null)
 let lost = ref(false)
 let won = ref(false)
 let areaRatio = ref(0)
+let timer = ref(0)
 
 const gameWidth = 600
 const gameHeight = 600
@@ -85,7 +86,8 @@ socket.on('connected', (id) => {
     coords: player.getRoundedPos(),
     color: player.color,
     trail: player.trailPoints,
-    area: player.areaOuterPoints.toArray()
+    area: player.areaOuterPoints.toArray(),
+    coverage: areaRatio.value
   })
 
   player.setUpdateFunc((pl) => {
@@ -94,7 +96,8 @@ socket.on('connected', (id) => {
       coords: pl.getRoundedPos(),
       color: pl.color,
       trail: pl.trailPoints,
-      area: pl.areaOuterPoints.toArray()
+      area: pl.areaOuterPoints.toArray(),
+      coverage: areaRatio.value
     })
     const plPos = pl.getRoundedPos()
     if (pl.trail.containsPoint(plPos)) {
@@ -155,6 +158,8 @@ socket.on('connected', (id) => {
       won.value = true
       app.ticker.stop()
       socket.disconnect()
+    } else {
+      gameOver(socket, playerId)
     }
   })
 
@@ -165,6 +170,10 @@ socket.on('connected', (id) => {
     app.stage.removeChild(disconnectedPlayer)
 
     otherPlayers = otherPlayers.filter((pl) => pl.id != id)
+  })
+
+  socket.on('timer', (timeRemainingSec) => {
+    timer.value = timeRemainingSec
   })
 })
 
@@ -189,6 +198,7 @@ function gameOver(socket, id) {
     <WinModal v-if="won"></WinModal>
     <GameOverModal v-if="lost"></GameOverModal>
     <h1 class="text-white text-4xl">{{ (areaRatio * 100).toFixed(2) }}%</h1>
+    <h1 class="text-white text-4xl">TIMER: {{ timer }}</h1>
     <div ref="pixiCanvas"></div>
   </div>
 </template>
