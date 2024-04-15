@@ -6,7 +6,7 @@ const io = require("socket.io")(http, {
 let players = [];
 let nextId = 0;
 
-const timerStartVal = 20;
+const timerStartVal = 30;
 let timeRemainingSec = timerStartVal;
 let intervalID = null;
 
