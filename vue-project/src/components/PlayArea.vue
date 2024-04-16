@@ -76,7 +76,7 @@ player.zIndex = 20
 let otherPlayers = []
 let playerId = null
 
-const socket = io('ws://localhost:8080')
+const socket = io('ws://147.175.105.92:3003')
 
 socket.on('connected', (id) => {
   playerId = id
